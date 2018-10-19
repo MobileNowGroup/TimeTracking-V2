@@ -1,0 +1,30 @@
+{% import "@AdminLTE/Macros/default.html.twig" as macro %}
+{% import "macros/widgets.html.twig" as widgets %}
+
+
+<ul class="control-sidebar-menu">
+    <li>
+        <a href="{{ path('user_profile', {'username' : user.username}) }}">
+            <div class="pull-left image">
+                {{  macro.avatar(user.avatar, user.username, 'img-circle') }}
+            </div>
+            <div class="menu-info">
+                <h4 class="control-sidebar-subheading">{{ widgets.username(user) }}</h4>
+                <p>{{ user.title }}</p>
+            </div>
+        </a>
+    </li>
+</ul>
+
+<h3 class="control-sidebar-heading">{{ 'preferences.title'|trans({}, 'sidebar') }}</h3>
+
+<div class="form-group">
+    <label class="control-sidebar-subheading">
+        {{ 'preferences.label.language'|trans({}, 'sidebar') }}
+        <select class="pull-right" onchange="window.location.href = this.options[this.selectedIndex].value;">
+            {% for locale in locales() %}
+                <option value="{{ path(originalRequest.get('_route', 'homepage'), originalRequest.get('_route_params', [])|merge({ _locale: locale.code })) }}" {% if app.request.locale == locale.code %}selected="selected"{% endif %}>{{ locale.name|capitalize }}</option>
+            {% endfor %}
+        </select>
+    </label>
+</div>

@@ -1,0 +1,73 @@
+version: '2'
+
+services:
+
+### Workspace Utilities ##################################
+    workspace:
+      build:
+        context: ./docker/workspace
+        args:
+          - PHP_VERSION=7.2
+          - NODE_VERSION=10.1.0
+          - NPM_REGISTRY=https://registry.npm.taobao.org
+          - YARN_VERSION=latest
+          - COMPOSER_REPO_PACKAGIST=https://packagist.phpcomposer.com
+          - TZ=Asia/Shanghai
+      volumes:
+          - ./:/var/www/html:cached
+      tty: true
+
+### PHP-FPM ##############################################
+    php-fpm:
+      build:
+        context: ./docker/php-fpm
+        args:
+          - PHP_VERSION=7.2
+      volumes:
+        - ./docker/php-fpm/php7.2.ini:/usr/local/etc/php/php.ini
+        - ./:/var/www/html:cached
+      expose:
+        - "9000"
+
+### NGINX Server #########################################
+    nginx:
+      build:
+        context: ./docker/nginx
+        args:
+          - PHP_UPSTREAM_CONTAINER=php-fpm
+          - PHP_UPSTREAM_PORT=9000
+      volumes:
+        - ./:/var/www/html:cached
+        - ./docker/docker-runtime/nginx/logs/:/var/log/nginx
+        - ./docker/nginx/sites:/etc/nginx/sites-available
+      ports:
+        - "8081:80"
+        - "7443:443"
+      depends_on:
+        - php-fpm
+        
+### PHP Worker ############################################
+    php-worker:
+      build:
+        context: ./docker/php-worker
+        args:
+          - PHP_VERSION=7.2
+      volumes:
+        - ./:/var/www:cached
+        - ./docker/php-worker/supervisord.d:/etc/supervisord.d
+      depends_on:
+        - workspace
+
+### MySQL Container #########################################
+
+    mysql:
+      image: mysql:5.7
+      volumes:
+        - ./docker/docker-runtime/mysql:/var/lib/mysql
+      ports:
+        - "3307:3306"
+      environment:
+        - MYSQL_USERNAME=root
+        - MYSQL_ROOT_PASSWORD=123456
+
+

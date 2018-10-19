@@ -1,0 +1,36 @@
+language: php
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.composer/cache/files
+
+addons:
+  mariadb: '10.2'
+
+services:
+  - mysql
+
+matrix:
+  fast_finish: true
+  include:
+    - php: 7.1
+    - php: 7.2
+
+before_install:
+  - phpenv config-rm xdebug.ini
+  - composer self-update
+
+install:
+  - composer install
+
+script:
+  - vendor/bin/phpunit tests/
+  - cp tests/.env.dist.sqlite .env
+  - bin/console doctrine:database:create -n
+  - bin/console doctrine:migrations:migrate -n
+  - bin/console doctrine:migrations:migrate first -n
+  - cp tests/.env.dist.mysql .env
+  - bin/console doctrine:database:create -n
+  - bin/console doctrine:migrations:migrate -n
+  - bin/console doctrine:migrations:migrate first -n

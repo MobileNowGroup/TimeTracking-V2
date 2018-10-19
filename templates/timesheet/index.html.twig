@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+{% import "macros/widgets.html.twig" as widgets %}
+{% import "macros/datatables.html.twig" as tables %}
+{% import "macros/toolbar.html.twig" as toolbar %}
+
+{% block page_title %}{{ 'timesheet.title'|trans }}{% endblock %}
+{% block page_subtitle %}{{ 'timesheet.subtitle'|trans }}{% endblock %}
+{% block page_actions %}{{ widgets.page_actions({'filter': '#collapseTimesheet', 'download': 'onclick:return exportTimesheet()', 'visibility': '#modal_timesheet', 'calendar': path('calendar'), 'create': path('timesheet_create')}) }}{% endblock %}
+
+{% block main_before %}
+    {{ toolbar.toolbar(toolbarForm, 'collapseTimesheet') }}
+{% endblock %}
+
+{% block main %}
+
+    {% if entries.count == 0 %}
+        {{ widgets.callout('warning', 'error.no_entries_found') }}
+    {% endif %}
+
+    {% set columns = {'date': 'alwaysVisible'} %}
+
+    {% if not duration_only %}
+        {% set columns = columns|merge({'starttime': '', 'endtime': ''}) %}
+    {% endif %}
+
+    {% set columns = columns|merge({
+        'duration': 'hidden-xs',
+        'rate': 'hidden-xs',
+        'activity': 'hidden-xs hidden-sm',
+        'description': 'hidden-xs hidden-sm',
+        'actions': 'alwaysVisible',
+    }) %}
+
+    {% set tableName = 'timesheet' %}
+
+    {{ tables.data_table_header(tableName, columns) }}
+
+    {% for entry in entries %}
+        <tr>
+            <td>{{ entry.begin|date_short }}</td>
+
+            {% if not duration_only %}
+                <td class="{{ tables.data_table_column_class(tableName, columns, 'starttime') }}">{{ entry.begin|date("H:i") }}</td>
+            {% endif %}
+
+            {% if entry.end %}
+                {% if not duration_only %}
+                    <td class="{{ tables.data_table_column_class(tableName, columns, 'endtime') }}">{{ entry.end|date("H:i") }}</td>
+                {% endif %}
+                <td class="{{ tables.data_table_column_class(tableName, columns, 'duration') }}">{{ entry.duration|duration }}</td>
+                <td class="{{ tables.data_table_column_class(tableName, columns, 'rate') }}">{{ entry.rate|money(entry.activity.project.customer.currency) }}</td>
+            {% else %}
+                {% if not duration_only %}
+                    <td class="{{ tables.data_table_column_class(tableName, columns, 'endtime') }}">&dash;</td>
+                {% endif %}
+                <td class="{{ tables.data_table_column_class(tableName, columns, 'duration') }}"><i>{{ entry|duration }}</i></td>
+                <td class="{{ tables.data_table_column_class(tableName, columns, 'rate') }}">&dash;</td>
+            {% endif %}
+
+            <td class="{{ tables.data_table_column_class(tableName, columns, 'activity') }}">{{ widgets.label_activity(entry.activity) }}</td>
+            <td class="{{ tables.data_table_column_class(tableName, columns, 'description') }} timesheet-description">{{ entry.description|desc2html }}</td>
+            <td>
+                {% set actionButtons = {'edit': path('timesheet_edit', {'id' : entry.id, 'page': page})} %}
+
+                {% if entry.end %}
+                    {% if is_granted('start', entry.activity) %}
+                        {% set actionButtons = {'repeat': path('timesheet_start', {'id' : entry.activity.id})}|merge(actionButtons) %}
+                    {% endif %}
+                {% else %}
+                    {% if is_granted('stop', entry) %}
+                        {% set actionButtons = {'stop': path('timesheet_stop', {'id' : entry.id})}|merge(actionButtons) %}
+                    {% endif %}
+                {% endif %}
+
+                {% set actionButtons = actionButtons|merge({'trash': path('timesheet_delete', {'id' : entry.id, 'page': page})}) %}
+                {{ widgets.button_group(actionButtons) }}
+            </td>
+        </tr>
+    {% endfor %}
+
+    {{ tables.data_table_footer(entries, 'timesheet_paginated') }}
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript">
+        function exportTimesheet() {
+            var form = $("div.toolbar form.navbar-form");
+            var prevAction = form.attr('action');
+            form.attr('target', '_blank').attr('action', '{{ path('timesheet_export') }}');
+            form.submit();
+            form.removeAttr('target').attr('action', prevAction);
+            return false;
+        }
+    </script>
+{% endblock %}

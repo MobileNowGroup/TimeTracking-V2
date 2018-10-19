@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+{% import "macros/widgets.html.twig" as widgets %}
+
+{% block page_title %}{{ 'dashboard.title'|trans }}{% endblock %}
+{% block page_subtitle %}{{ 'dashboard.subtitle'|trans }}{% endblock %}
+
+{% block page_content_class %}{{ parent() }} dashboard{% endblock %}
+
+{% block main %}
+
+    {% for row in widget_rows %}
+        {% if row.type == constant('App\\Model\\DashboardSection::TYPE_CHART') %}
+            {% embed 'dashboard/section-chart.html.twig' with { section: row } %}{% endembed %}
+        {% else %}
+            {% embed 'dashboard/section-simple.html.twig' with { section: row } %}{% endembed %}
+        {% endif %}
+    {% endfor %}
+
+{% endblock %}

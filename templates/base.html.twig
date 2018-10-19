@@ -1,0 +1,101 @@
+{% extends '@AdminLTE/layout/default-layout-avanzu.html.twig' %}
+
+{% block avanzu_page_content_before %}
+    <div class="pad no-print">
+        {% block main_before %}{% endblock %}
+    </div>
+{% endblock %}
+
+{% block avanzu_page_content_after %}
+    {% block main_after %}{% endblock %}
+{% endblock %}
+
+{% block avanzu_page_content %}
+    {% block main %}{% endblock %}
+{% endblock %}
+
+{% block avanzu_document_title %}
+    {% block title %}{{ 'browser.title'|trans }}{% endblock %}
+{% endblock %}
+
+{% block avanzu_page_title %}
+    {% block page_title %}{% endblock %}
+{% endblock %}
+
+{% block avanzu_page_subtitle %}
+    {% block page_subtitle %}{% endblock %}
+{% endblock %}
+
+{% block avanzu_logo_mini %}
+    <b>K</b>TT
+{% endblock %}
+
+{% block avanzu_logo_lg %}
+    <b>Kimai</b> - Time Tracking
+{% endblock %}
+
+{% block avanzu_footer %}
+    {% block footer %}
+    <!-- Page rendered on {{ 'now'|localizeddate('long', 'long', null, 'UTC') }} -->
+    {% endblock %}
+{% endblock %}
+
+{% block avanzu_navbar_messages %}
+    {% if app.user is not null and is_granted('IS_AUTHENTICATED_REMEMBERED') %}
+        {% if is_granted('ROLE_USER') %}
+            <li class="visible-xs-inline-block">
+                <a href="{{ path('timesheet') }}" class="ddt-large">
+                    <i class="{{ 'timesheet'|icon }} fa-2x"></i>
+                </a>
+            </li>
+        {% endif %}
+        {% if is_granted('ROLE_TEAMLEAD') %}
+            <li class="visible-xs-inline-block">
+                <a href="{{ path('invoice') }}" class="ddt-large">
+                    <i class="{{ 'invoice'|icon }} fa-2x"></i>
+                </a>
+            </li>
+        {% endif %}
+        {% block navbar_extensions %}{% endblock %}
+        {{ render(controller('App\\Controller\\TimesheetController::activeEntriesAction')) }}
+    {% endif %}
+{% endblock %}
+
+{% block avanzu_navbar_notifications %}
+    {% if app.user is not null and is_granted('IS_AUTHENTICATED_REMEMBERED') %}
+        {{ render(controller('App\\Controller\\ActivityController::recentActivitiesAction')) }}
+    {% endif %}
+{% endblock %}
+
+{# deactivated blocks #}
+{% block avanzu_navbar_tasks %}{% endblock %}
+{% block avanzu_navbar_user %}{% endblock %}
+{% block avanzu_sidebar_user %}{% endblock %}
+{% block avanzu_sidebar_search %}{% endblock %}
+
+{% block avanzu_breadcrumb %}
+    {{ block('page_actions') }}
+{% endblock %}
+
+{% block page_actions %}{% endblock %}
+
+{% block stylesheets %}
+    {# we do not call parent() as we use a custom built for the frontend assets and don't want the default <stylesheet> #}
+    <link rel="stylesheet" href="{{ asset('build/app.css') }}">
+{% endblock %}
+
+{% block head %}
+    {{ parent() }}
+    <script src="{{ asset('build/app.js') }}"></script>
+    {% include 'partials/head.html.twig' %}
+{% endblock %}
+
+{% block javascripts %}
+    {# we do not call parent() as we use a custom built for the frontend assets and don't want the default <script> #}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $.kimai.init({locale: '{{ app.request.locale }}', confirmDelete: '{{ 'confirm.delete'|trans }}'});
+            //$.kimai.pauseRecord('li.messages-menu ul.menu li');
+        });
+    </script>
+{% endblock %}

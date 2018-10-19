@@ -1,0 +1,20 @@
+{% set version = constant('App\\Constants::VERSION') ~ ' ' ~ constant('App\\Constants::STATUS') %}
+<ul class="control-sidebar-menu">
+    <li>
+        <a href="{{ path('help') }}">
+            <i class="menu-icon {{ 'manual'|icon }} bg-yellow"></i>
+
+            <div class="menu-info">
+                <h4 class="control-sidebar-subheading">{{ 'help.title'|trans({}, 'sidebar') }}</h4>
+                <p>{{ 'help.subtitle'|trans({}, 'sidebar') }}</p>
+            </div>
+        </a>
+    </li>
+</ul>
+
+<h3 class="control-sidebar-heading">{{ 'home.title'|trans({'%version%': version}, 'sidebar') }}</h3>
+<div class="form-group">
+    {{ 'home.betainfo'|trans({'%version%': version, '%url%': constant('App\\Constants::GITHUB')}, 'sidebar')|raw|nl2br }}
+    <br>
+    <a href="{{ constant('App\\Constants::GITHUB') }}graphs/contributors">{{ 'made.by.license'|trans({}, 'sidebar')|raw }}</a>
+</div>
